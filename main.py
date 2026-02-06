@@ -224,9 +224,9 @@ def update_all():
     
     delay_str = ""
     if sm.system_delay != 0:
-        if sm.system_delay == 1: delay_str = "z \\cdot "
-        elif sm.system_delay == -1: delay_str = "z^{-1} \\cdot "
-        else: delay_str = f"z^{{{sm.system_delay}}} \\cdot "
+        if sm.system_delay == 1: delay_str = "z^{-1} \\cdot"
+        elif sm.system_delay == -1: delay_str = "z \\cdot "
+        else: delay_str = f"z^{{{-sm.system_delay}}} \\cdot "
             
     tf_str = rf"$\mathbf{{H(z)}} = {delay_str}\frac{{{fmt.poly_to_mathtext(b)}}}{{{fmt.poly_to_mathtext(a)}}}$"
     tf_text.set_text(tf_str)
@@ -275,7 +275,7 @@ def update_all():
     sm.delay_artists = []
     
     if sm.system_delay != 0:
-        marker = 'o' if sm.system_delay > 0 else 'x'
+        marker = 'x' if sm.system_delay > 0 else 'o'
         color = '#000000'
         marker_color = 'none' if sm.system_delay > 0 else color
         
@@ -315,6 +315,13 @@ def reset_board(event):
         try: artist.remove()
         except: pass
     sm.delay_artists = []
+
+    if sm.ghost_artist:
+        try: sm.ghost_artist.remove()
+        except: pass
+        sm.ghost_artist = None
+    
+    sm.mode = None
     
     # Reset State
     sm.zeros = []
@@ -386,6 +393,7 @@ fig.canvas.mpl_connect("button_press_event", interact.on_press)
 fig.canvas.mpl_connect("motion_notify_event", interact.on_motion)
 fig.canvas.mpl_connect("button_release_event", interact.on_release)
 fig.canvas.mpl_connect("button_press_event", interact.on_response_click)
+fig.canvas.mpl_connect('key_press_event', interact.on_key_press)
 
 # Special Case: Transfer Function Editor needs root and callback passed
 fig.canvas.mpl_connect('pick_event', lambda e: ui.open_tf_editor(e, root, update_all))

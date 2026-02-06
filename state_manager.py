@@ -34,6 +34,7 @@ mode = None         # Current tool mode: 'zero' or 'pole'
 dragging = None     # Currently dragged element
 selected = None     # Currently selected element (for context menu)
 add_conjugates = False # Toggle for real-filter mode
+ghost_artist = None    # Stores the temporary visual for drag-and-drop
 
 # Plotting & Visualization Storage
 zeros_opts = []     # Display options for zeros (polar/cartesian visibility)

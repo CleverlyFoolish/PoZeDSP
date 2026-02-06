@@ -86,7 +86,7 @@ def compute_H(w_vals):
     
     # Apply System Delay (z^k or z^-k)
     if sm.system_delay != 0:
-        H *= (z ** sm.system_delay)
+        H *= (z **-sm.system_delay)
 
     # Accumulate Zeros: (1 - z0 * z^-1) -> H *= (1 - z0/z)
     for z0 in sm.zeros:

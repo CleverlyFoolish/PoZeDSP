@@ -59,6 +59,37 @@ def set_mode_pole(event): set_mode("pole")
 # Z-Plane Interactions (Click, Drag, Context Menu)
 # ------------------------------------------------------------
 
+def on_key_press(event):
+    """
+    NEW: Handles Keyboard Shortcuts.
+    Press 'escape' to cancel Add Mode.
+    """
+    if event.key == 'escape':
+        if sm.mode in ["zero", "pole"]:
+            # 1. Clean up Ghost
+            if sm.ghost_artist:
+                try: sm.ghost_artist.remove()
+                except: pass
+                sm.ghost_artist = None
+            
+            # 2. Reset Mode
+            sm.mode = None
+            print("Mode Cancelled")
+            
+            # 3. FORCE IMMEDIATE REDRAW (Fix for lag)
+            sm.fig.canvas.draw()
+            sm.fig.canvas.flush_events()
+
+def finish_add_mode():
+    """Removes ghost and resets mode after a successful drop"""
+    if sm.ghost_artist:
+        try: sm.ghost_artist.remove()
+        except: pass
+        sm.ghost_artist = None
+    
+    sm.mode = None 
+    trigger_update()
+
 def on_press(event):
     # Verify we are on the Z-plane axis (stored in sm by main)
     if event.inaxes != sm.ax_z: return
@@ -118,6 +149,32 @@ def on_press(event):
 
 
 def on_motion(event):
+    if sm.mode in ["zero", "pole"]:
+        if event.inaxes == sm.ax_z:
+            # 1. Create Ghost if it doesn't exist
+            if sm.ghost_artist is None:
+                if sm.mode == "zero":
+                    # Blue Circle (Transparent)
+                    sm.ghost_artist, = sm.ax_z.plot([], [], 'o', color='blue', alpha=0.5, 
+                                                    markeredgewidth=2, markerfacecolor='none', 
+                                                    markersize=12)
+                else:
+                    # Red X (Transparent)
+                    sm.ghost_artist, = sm.ax_z.plot([], [], 'x', color='red', alpha=0.5, 
+                                                    markeredgewidth=3, markersize=12)
+            
+            # 2. Move Ghost to mouse position
+            sm.ghost_artist.set_data([event.xdata], [event.ydata])
+            sm.fig.canvas.draw_idle()
+            
+        # 3. If mouse leaves the plot, hide the ghost
+        elif sm.ghost_artist is not None:
+            try: sm.ghost_artist.remove()
+            except: pass
+            sm.ghost_artist = None
+            sm.fig.canvas.draw_idle()
+            
+        return
     if sm.dragging is None or event.inaxes != sm.ax_z: return
 
     # 1. Get new position

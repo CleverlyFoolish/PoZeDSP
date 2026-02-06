@@ -203,12 +203,12 @@ def show_signal_analysis(event=None):
     
     b, a = dsp.coeffs_quantized()
     
-    if sm.system_delay != 0:
-        x = np.roll(x, sm.system_delay)
-        if sm.system_delay > 0: x[:sm.system_delay] = 0
-        else: x[sm.system_delay:] = 0
-
     y = dsp.filter_signal(b, a, x)
+
+    if sm.system_delay != 0:
+        y = np.roll(y, sm.system_delay)
+        if sm.system_delay > 0: y[:sm.system_delay] = 0
+        else: y[sm.system_delay:] = 0
 
     if sm.signal_fig is None or not plt.fignum_exists(sm.signal_fig.number):
         sm.signal_fig = plt.figure("Signal Analysis", figsize=(9, 6))
@@ -265,9 +265,9 @@ def open_tf_editor(event, tk_root, update_callback):
     
     entry_b = add_row("Numerator (b):", arr_to_str(curr_b))
     entry_a = add_row("Denominator (a):", arr_to_str(curr_a))
-    entry_d = add_row("Delay (z^k):", str(sm.system_delay))
+    entry_d = add_row("Delay (z^-k):", str(sm.system_delay))
     
-    lbl = tk.Label(dialog, text="Delay > 0 adds zeros at origin (z)\nDelay < 0 adds poles at origin (z^-1)", 
+    lbl = tk.Label(dialog, text="Delay > 0 adds poles at origin (z^-1)\nDelay < 0 adds zeros at origin (z)", 
                    fg="gray", font=("Arial", 9), pady=10)
     lbl.pack()
 

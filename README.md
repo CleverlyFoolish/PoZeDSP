@@ -63,6 +63,7 @@ The interface is divided into four main sections:
 | :--- | :--- | :--- |
 | **Add Point** | **Left Click** | Adds a Pole or Zero (depending on selected mode). |
 | **Move Point** | **Drag** | Moves the selected point. |
+| **Cancel Mode** | `Esc` | Cancels "Add Pole/Zero" mode without placing anything. |
 | **Context Menu** | **Right Click** | Opens menu to Remove point or toggle coordinates. |
 | **Edit Value** | **Double Click** | Opens dialog to type exact coordinates. |
 | **Measure** | **Click on Graph** | Adds a data tip (tooltip) to the Mag/Phase response. |
