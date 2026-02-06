@@ -32,7 +32,7 @@
 ### Setup
 1.  **Clone the Repository:**
     ```bash
-    git clone [https://github.com/CleverlyFoolish/PoZeDSP.git](https://github.com/CleverlyFoolish/PoZeDSP.git)
+    git clone https://github.com/CleverlyFoolish/PoZeDSP.git
     cd PoZeDSP
     ```
 
