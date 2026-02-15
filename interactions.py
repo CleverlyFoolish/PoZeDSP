@@ -17,8 +17,9 @@
 # See <https://www.gnu.org/licenses/>.
 # =============================================================================
 
-import tkinter as tk
-from tkinter import simpledialog, Menu
+# Note: tkinter imports moved inside functions for macOS compatibility
+# import tkinter as tk
+# from tkinter import simpledialog, Menu
 import numpy as np
 import state_manager as sm
 import dsp_engine as dsp
@@ -54,6 +55,9 @@ def set_mode(m):
 
 def set_mode_zero(event): set_mode("zero")
 def set_mode_pole(event): set_mode("pole")
+
+# Theme Control REMOVED per user request
+# def toggle_theme(event): ...
 
 # ------------------------------------------------------------
 # Z-Plane Interactions (Click, Drag, Context Menu)
@@ -223,32 +227,39 @@ def on_release(event):
 # ------------------------------------------------------------
 
 def show_context_menu(event):
-    if not _tk_root: return
-    
-    menu = Menu(_tk_root, tearoff=0)
-    menu.add_command(label="Set Coordinate", command=set_coordinate)
-    
-    kind, idx = sm.selected
-    opts = sm.zeros_opts if kind == "zero" else sm.poles_opts
-    
-    # 1. Cartesian Toggle
-    coord_state = opts[idx]['show']
-    coord_label = "Hide Rectangular (x,y)" if coord_state else "Show Rectangular (x,y)"
-    menu.add_command(label=coord_label, command=toggle_coordinate)
-
-    # 2. Polar Toggle
-    polar_state = opts[idx].get('show_polar', False)
-    polar_label = "Hide Polar (r,θ)" if polar_state else "Show Polar (r,θ)"
-    menu.add_command(label=polar_label, command=toggle_polar)
-
-    menu.add_separator()
-    menu.add_command(label="Remove", command=remove_selected)
+    if not _tk_root: 
+        print("Context menu disabled due to root issues")
+        return
     
     try:
-        # Get coordinates from the GUI event attached to the MPL event
-        menu.tk_popup(event.guiEvent.x_root, event.guiEvent.y_root)
-    finally:
-        menu.grab_release()
+        from tkinter import Menu
+        menu = Menu(_tk_root, tearoff=0)
+        menu.add_command(label="Set Coordinate", command=set_coordinate)
+        
+        kind, idx = sm.selected
+        opts = sm.zeros_opts if kind == "zero" else sm.poles_opts
+        
+        # 1. Cartesian Toggle
+        coord_state = opts[idx]['show']
+        coord_label = "Hide Rectangular (x,y)" if coord_state else "Show Rectangular (x,y)"
+        menu.add_command(label=coord_label, command=toggle_coordinate)
+
+        # 2. Polar Toggle
+        polar_state = opts[idx].get('show_polar', False)
+        polar_label = "Hide Polar (r,θ)" if polar_state else "Show Polar (r,θ)"
+        menu.add_command(label=polar_label, command=toggle_polar)
+
+        menu.add_separator()
+        menu.add_command(label="Remove", command=remove_selected)
+        
+        try:
+            # Get coordinates from the GUI event attached to the MPL event
+            menu.tk_popup(event.guiEvent.x_root, event.guiEvent.y_root)
+        finally:
+            menu.grab_release()
+            
+    except Exception as e:
+        print(f"Context menu disabled (Tkinter error: {e})")
 
 def toggle_coordinate():
     if sm.selected is None: return
@@ -269,24 +280,31 @@ def toggle_polar():
     trigger_update()
 
 def set_coordinate():
-    if sm.selected is None or not _tk_root: return
+    if sm.selected is None or not _tk_root: 
+        return
 
-    kind, idx = sm.selected
-    current_val = sm.zeros[idx] if kind == "zero" else sm.poles[idx]
+    try:
+        from tkinter import simpledialog
+        
+        kind, idx = sm.selected
+        current_val = sm.zeros[idx] if kind == "zero" else sm.poles[idx]
 
-    re = simpledialog.askfloat("Set Coordinate", "Real part:", 
-                               initialvalue=current_val.real, parent=_tk_root)
-    if re is None: return
-    
-    im = simpledialog.askfloat("Set Coordinate", "Imaginary part:", 
-                               initialvalue=current_val.imag, parent=_tk_root)
-    if im is None: return
+        re = simpledialog.askfloat("Set Coordinate", "Real part:", 
+                                   initialvalue=current_val.real, parent=_tk_root)
+        if re is None: return
+        
+        im = simpledialog.askfloat("Set Coordinate", "Imaginary part:", 
+                                   initialvalue=current_val.imag, parent=_tk_root)
+        if im is None: return
 
-    z_new = re + 1j * im
-    if kind == "zero": sm.zeros[idx] = z_new
-    else: sm.poles[idx] = z_new
-
-    trigger_update()
+        z_new = re + 1j * im
+        if kind == "zero": sm.zeros[idx] = z_new
+        else: sm.poles[idx] = z_new
+        
+        trigger_update()
+        
+    except Exception as e:
+        print(f"Manual coordinate setting disabled (Tkinter error: {e})")
 
 def remove_selected():
     if sm.selected is None: return

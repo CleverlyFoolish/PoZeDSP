@@ -17,8 +17,9 @@
 # See <https://www.gnu.org/licenses/>.
 # =============================================================================
 
-import tkinter as tk
-from tkinter import simpledialog, messagebox
+# Note: tkinter imports moved inside functions for macOS compatibility
+# import tkinter as tk
+# from tkinter import simpledialog, messagebox
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -35,7 +36,11 @@ def setup_advanced_textbox(textbox, tk_root):
     """
     Enhances a Matplotlib TextBox with clipboard support (Ctrl+C/V),
     Select All (Ctrl+A), and auto-scroll alignment.
+    Note: Some features disabled when tk_root is None.
     """
+    # Enhanced textbox logic enabled
+    textbox._select_all_mode = False
+        
     textbox._select_all_mode = False
 
     def update_view():
@@ -144,9 +149,9 @@ def decorate_button(ax, type_):
         ax.text(0.5, 0.25, "Add Zero", ha='center', va='top', fontsize=9, fontweight='bold')
     elif type_ == 'pole':
         # Red X
-        ax.plot(0.12, 0.55, 'x', color='red', markeredgewidth=3, 
+        ax.plot(0.5, 0.55, 'x', color='red', markeredgewidth=3, 
                 markersize=18, label='Pole')
-        ax.text(0.12, 0.25, "Add Pole", ha='center', va='top', fontsize=9, fontweight='bold')
+        ax.text(0.5, 0.25, "Add Pole", ha='center', va='top', fontsize=9, fontweight='bold')
 
 # ------------------------------------------------------------
 # Popups and Dialogs
@@ -195,7 +200,13 @@ def show_signal_analysis(event=None):
         if x.ndim == 0: x = np.full(num_pts, x)
         
     except Exception as e:
-        tk.messagebox.showerror("Signal Error", f"Invalid Expression: {e}")
+        # Handle both signal processing errors and tkinter import errors
+        try:
+            import tkinter as tk
+            from tkinter import messagebox
+            tk.messagebox.showerror("Signal Error", f"Invalid Expression: {e}")
+        except Exception:
+            print(f"Signal Error: {e} (messagebox disabled)")
         return
 
     # Generate the LaTeX title safely
@@ -238,11 +249,13 @@ def open_tf_editor(event, tk_root, update_callback):
     """
     Opens a Tkinter dialog to manually edit the Transfer Function coefficients.
     """
+        
     # Verify the click happened on the text box
     tf_text_artist = getattr(sm, 'tf_text_artist', None)
     if event.artist != tf_text_artist: 
         return
 
+    import tkinter as tk
     dialog = tk.Toplevel(tk_root)
     dialog.title("Edit Transfer Function")
     dialog.geometry("400x250") 
@@ -313,7 +326,13 @@ def open_tf_editor(event, tk_root, update_callback):
             dialog.destroy()
             
         except ValueError as e:
-            tk.messagebox.showerror("Error", f"Invalid Input: {e}\nUse comma-separated numbers like '1+2j, 3'.")
+            try:
+                import tkinter as tk
+                from tkinter import messagebox
+                tk.messagebox.showerror("Error", f"Invalid Input: {e}\nUse comma-separated numbers like '1+2j, 3'.")
+            except Exception:
+                print(f"Error: Invalid Input: {e}")
 
+    import tkinter as tk
     btn = tk.Button(dialog, text="Apply Config", command=on_submit, bg="#ddffdd", font=("Arial", 10, "bold"))
     btn.pack(pady=10, fill='x', padx=20)
