@@ -35,12 +35,8 @@ import formatting_utils as fmt
 def setup_advanced_textbox(textbox, tk_root):
     """
     Enhances a Matplotlib TextBox with clipboard support (Ctrl+C/V),
-<<<<<<< HEAD
-    Select All (Ctrl+A), and auto-scroll alignment.
-    Note: Some features disabled when tk_root is None.
-=======
     Select All (Ctrl+A), and smart scrolling that tracks the cursor.
->>>>>>> main
+    Note: Some features disabled when tk_root is None.
     """
     # Enhanced textbox logic enabled
     textbox._select_all_mode = False

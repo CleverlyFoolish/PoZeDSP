@@ -312,28 +312,34 @@ def set_coordinate_polar():
     """
     if sm.selected is None or not _tk_root: return
 
-    kind, idx = sm.selected
-    current_val = sm.zeros[idx] if kind == "zero" else sm.poles[idx]
+    try:
+        from tkinter import simpledialog
 
-    current_r = np.abs(current_val)
-    current_theta = np.angle(current_val) 
+        kind, idx = sm.selected
+        current_val = sm.zeros[idx] if kind == "zero" else sm.poles[idx]
 
-    r = simpledialog.askfloat("Set Polar", "Magnitude (r):", 
-                              initialvalue=f"{current_r:.4f}", parent=_tk_root)
-    if r is None: return
-    if r < 0:
-        r = abs(r)
+        current_r = np.abs(current_val)
+        current_theta = np.angle(current_val) 
 
-    theta = simpledialog.askfloat("Set Polar", "Angle (radians):", 
-                                  initialvalue=f"{current_theta:.4f}", parent=_tk_root)
-    if theta is None: return
+        r = simpledialog.askfloat("Set Polar", "Magnitude (r):", 
+                                  initialvalue=f"{current_r:.4f}", parent=_tk_root)
+        if r is None: return
+        if r < 0:
+            r = abs(r)
 
-    z_new = r * np.exp(1j * theta)
+        theta = simpledialog.askfloat("Set Polar", "Angle (radians):", 
+                                      initialvalue=f"{current_theta:.4f}", parent=_tk_root)
+        if theta is None: return
 
-    if kind == "zero": sm.zeros[idx] = z_new
-    else: sm.poles[idx] = z_new
+        z_new = r * np.exp(1j * theta)
 
-    trigger_update()
+        if kind == "zero": sm.zeros[idx] = z_new
+        else: sm.poles[idx] = z_new
+
+        trigger_update()
+    
+    except Exception as e:
+        print(f"Polar coordinate setting disabled (Tkinter error: {e})")
 
 def remove_selected():
     if sm.selected is None: return
