@@ -40,6 +40,25 @@ def rect(t, width):
     """Generates a rectangular pulse of specified width."""
     return np.where((t >= 0) & (t < width), 1.0, 0.0)
 
+def pulse_train_gen(n_array, start, space, num):
+    """
+    Generates a train of impulses (deltas).
+    
+    Args:
+        n_array (np.array): The time indices [0, 1, 2, ...].
+        start (int): The index where the first impulse occurs.
+        space (int): The spacing between impulses.
+        num (int): The total number of impulses to generate.
+    """
+    y = np.zeros_like(n_array, dtype=float)
+    
+    indices = [int(start + i * space) for i in range(int(num))]
+    
+    for idx in indices:
+        if 0 <= idx < len(n_array):
+            y[idx] = 1.0
+            
+    return y
 # ------------------------------------------------------------
 # Digital Filtering Core
 # ------------------------------------------------------------

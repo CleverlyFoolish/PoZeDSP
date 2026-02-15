@@ -86,6 +86,7 @@ In the "x[n]" text box, you can write Python expressions using `n` as the time v
 | **Rectangular** | `rect(n, W)` | 1 for $0 \le n < W$. |
 | **Sine/Cos** | `sin(w*n)`, `cos(w*n)` | Standard trigonometric functions. |
 | **Exponential** | `exp(a*n)` | $e^{a*n}$ |
+| **Pulse Train** | `pt(start, space, num)` | Generates `num` impulses starting at `start`, spaced by `space`. <br> *Example:* `pt(0, 10, 5)` |
 | **Noise** | `random.randn(len(n))` | Gaussian white noise. |
 
 **Example Signals:**

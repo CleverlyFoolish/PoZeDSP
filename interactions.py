@@ -96,7 +96,7 @@ def on_press(event):
 
     z = event.xdata + 1j * event.ydata
     
-    def find_closest(points, threshold=0.2):
+    def find_closest(points, threshold=0.1):
         for i, val in enumerate(points):
             if abs(z - val) < threshold: return i
         return None
@@ -124,11 +124,7 @@ def on_press(event):
 
     # Left Click -> Select/Drag or Add Point
     if event.button == 1:
-        if target:
-            sm.selected = target
-            sm.dragging = target
-        else:
-            # Adding new points
+        if sm.mode in ["zero", "pole"]:
             if sm.mode == "zero":
                 sm.zeros.append(z)
                 sm.zeros_opts.append({'show': False, 'show_polar': False})
@@ -147,6 +143,9 @@ def on_press(event):
                     sm.poles_opts.append({'show': False, 'show_polar': False})
                 trigger_update()
 
+        elif target:
+            sm.selected = target
+            sm.dragging = target
 
 def on_motion(event):
     if sm.mode in ["zero", "pole"]:
@@ -227,6 +226,7 @@ def show_context_menu(event):
     
     menu = Menu(_tk_root, tearoff=0)
     menu.add_command(label="Set Coordinate", command=set_coordinate)
+    menu.add_command(label="Set Coordinate (Polar)", command=set_coordinate_polar)
     
     kind, idx = sm.selected
     opts = sm.zeros_opts if kind == "zero" else sm.poles_opts
@@ -288,6 +288,35 @@ def set_coordinate():
 
     trigger_update()
 
+def set_coordinate_polar():
+    """
+    Opens dialogs to set the position using Magnitude (r) and Phase (theta).
+    """
+    if sm.selected is None or not _tk_root: return
+
+    kind, idx = sm.selected
+    current_val = sm.zeros[idx] if kind == "zero" else sm.poles[idx]
+
+    current_r = np.abs(current_val)
+    current_theta = np.angle(current_val) 
+
+    r = simpledialog.askfloat("Set Polar", "Magnitude (r):", 
+                              initialvalue=f"{current_r:.4f}", parent=_tk_root)
+    if r is None: return
+    if r < 0:
+        r = abs(r)
+
+    theta = simpledialog.askfloat("Set Polar", "Angle (radians):", 
+                                  initialvalue=f"{current_theta:.4f}", parent=_tk_root)
+    if theta is None: return
+
+    z_new = r * np.exp(1j * theta)
+
+    if kind == "zero": sm.zeros[idx] = z_new
+    else: sm.poles[idx] = z_new
+
+    trigger_update()
+
 def remove_selected():
     if sm.selected is None: return
     kind, idx = sm.selected
@@ -312,7 +341,17 @@ def on_response_click(event):
     # Setup Colors and Data
     if event.inaxes == sm.ax_mag:
         color = 'navy'
-        y_data = np.abs(dsp.compute_H(sm.w_hires))
+        H = dsp.compute_H(sm.w_hires)
+        mag_linear = np.abs(H)
+        
+        max_val = np.max(mag_linear)
+        if max_val > 1e-9:
+            mag_norm = mag_linear / max_val
+        else:
+            mag_norm = mag_linear
+            
+        y_data = 20 * np.log10(mag_norm + 1e-12)
+        unit_str = " dB"
     else:
         color = 'crimson'
         y_data = np.angle(dsp.compute_H(sm.w_hires))
@@ -337,7 +376,7 @@ def on_response_click(event):
     # Add New Annotation
     dot, = event.inaxes.plot(w_snap, y_snap, 'o', color=color, markersize=6, zorder=10)
     
-    text_str = f"({w_snap:.2f} rad, {y_snap:.2f})"
+    text_str = f"({w_snap:.2f} rad, {y_snap:.2f}{unit_str})"
     
     txt = event.inaxes.annotate(
         text_str, 

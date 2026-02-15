@@ -212,14 +212,28 @@ def update_all():
     ax_z.set_xlim(-limit, limit)
     ax_z.set_ylim(-limit, limit)
 
-    # 4. Update Frequency Responses
     H = dsp.compute_H(sm.w_hires)
-    mag_line.set_data(sm.w_hires, np.abs(H))
+    mag_linear = np.abs(H)
+    
+    max_val = np.max(mag_linear)
+    if max_val > 1e-9:
+        mag_norm = mag_linear / max_val
+    else:
+        mag_norm = mag_linear
+        
+    mag_db = 20 * np.log10(mag_norm + 1e-12)
+
+    mag_line.set_data(sm.w_hires, mag_db)
     phase_line.set_data(sm.w_hires, np.angle(H))
     
-    ax_mag.relim(); ax_mag.autoscale_view()
-    
-    # 5. Update Transfer Function Text
+    min_db = np.min(mag_db)
+    bottom_limit = -60 
+    if bottom_limit > -10: 
+        bottom_limit = -10
+        
+    ax_mag.set_ylim(bottom=bottom_limit, top=5) 
+    ax_mag.set_xlim(-np.pi, np.pi)
+  
     b, a = dsp.coeffs_quantized()
     
     delay_str = ""
