@@ -6,3 +6,6 @@ build/
 .idea/
 .DS_Store
 Thumbs.db
+dist/
+*.dmg
+build_app.sh
