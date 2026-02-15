@@ -34,32 +34,52 @@ import formatting_utils as fmt
 def setup_advanced_textbox(textbox, tk_root):
     """
     Enhances a Matplotlib TextBox with clipboard support (Ctrl+C/V),
-    Select All (Ctrl+A), and auto-scroll alignment.
+    Select All (Ctrl+A), and smart scrolling that tracks the cursor.
     """
     textbox._select_all_mode = False
 
-    def update_view():
-        # Get the text object and the box width
+    def update_view(event=None):
+        """
+        Smart scrolling: Shifts the text horizontally so the area 
+        around the cursor is always visible.
+        """
+        # 1. Get Text Dimensions
         txt_obj = textbox.text_disp
         renderer = textbox.ax.figure.canvas.get_renderer()
-        bbox = txt_obj.get_window_extent(renderer)
-        box_width = textbox.ax.bbox.width
         
-        # If text is wider than the box
-        if bbox.width > box_width:
-            # If cursor is at the end, align Right to show the tail
-            if textbox.cursor_index >= len(textbox.text):
-                txt_obj.set_horizontalalignment('right')
-                txt_obj.set_x(0.95) # Anchor to right edge
-            else:
-                # If cursor is elsewhere, default to Left
-                txt_obj.set_horizontalalignment('left')
-                txt_obj.set_x(0.05)
-        else:
-            # Text fits? Standard Left alignment
-            txt_obj.set_horizontalalignment('left')
-            txt_obj.set_x(0.05)
+        # Get the bounding box of the text content
+        bbox = txt_obj.get_window_extent(renderer)
+        text_width = bbox.width
+        
+        # Get the width of the textbox container (axis)
+        box_bbox = textbox.ax.get_window_extent(renderer)
+        box_width = box_bbox.width
+
+        # 2. Calculate Overflow
+        overflow = text_width - box_width
+        
+        # Default Alignment (Left, with small padding)
+        base_x = 0.05
+        align = 'left'
+        
+        # 3. Apply Scroll if needed
+        if overflow > 0 and len(textbox.text) > 0:
+            cursor_ratio = textbox.cursor_index / len(textbox.text)
+            cursor_ratio = max(0.0, min(1.0, cursor_ratio))
             
+            # We add a small buffer so the cursor isn't glued to the edge.
+            shift_pixels = -1 * cursor_ratio * (overflow + 20) # +20px buffer
+            new_x = base_x + (shift_pixels / box_width)
+            
+            # Apply
+            txt_obj.set_horizontalalignment(align)
+            txt_obj.set_x(new_x)
+            
+        else:
+            # Text fits? Reset to standard Left alignment
+            txt_obj.set_horizontalalignment(align)
+            txt_obj.set_x(base_x)
+
         textbox.ax.figure.canvas.draw_idle()
 
     def on_key_press(event):
@@ -69,7 +89,6 @@ def setup_advanced_textbox(textbox, tk_root):
         # --- 1. Handle Ctrl+A (Select All) ---
         if event.key == 'ctrl+a':
             textbox._select_all_mode = True
-            # Visual feedback: Change text color to indicate selection
             textbox.text_disp.set_color('blue')
             textbox.ax.figure.canvas.draw_idle()
             return
@@ -77,7 +96,6 @@ def setup_advanced_textbox(textbox, tk_root):
         # --- 2. Handle Backspace ---
         if event.key == 'backspace':
             if textbox._select_all_mode:
-                # Clear everything
                 textbox.set_val("")
                 textbox._select_all_mode = False
                 textbox.text_disp.set_color('black')
@@ -95,39 +113,31 @@ def setup_advanced_textbox(textbox, tk_root):
             try:
                 paste_text = tk_root.clipboard_get()
                 current_text = textbox.text
-                
-                # If Select All was active, replace everything
                 if textbox._select_all_mode:
                     new_text = paste_text
                 else:
-                    # Insert at cursor
                     c_idx = textbox.cursor_index
                     new_text = current_text[:c_idx] + paste_text + current_text[c_idx:]
                 
                 textbox.set_val(new_text)
-                
-                # Reset Selection Mode
                 textbox._select_all_mode = False
                 textbox.text_disp.set_color('black')
-                
             except Exception:
                 pass
 
-        # --- 5. Handle Normal Typing (Reset Selection) ---
+        # --- 5. Handle Normal Typing ---
         elif len(event.key) == 1 and not event.key.startswith('ctrl'):
-            # If we type a character while everything is selected, replace it
             if textbox._select_all_mode:
                 textbox.set_val(event.key)
                 textbox._select_all_mode = False
                 textbox.text_disp.set_color('black')
 
-        # Always update the view scroll after any key
         update_view()
 
     # Connect the event
     textbox.ax.figure.canvas.mpl_connect('key_press_event', on_key_press)
     
-    # Also update view on any 'text_change'
+    # Also update view on any text content change
     textbox.on_text_change(lambda x: update_view())
 
 def decorate_button(ax, type_):
@@ -187,7 +197,9 @@ def show_signal_analysis(event=None):
             'r': dsp.ramp,           
             'sinc': np.sinc,
             'rect': dsp.rect,        
-            'len': len
+            'len': len,
+            'pulse_train': lambda start, space, num: dsp.pulse_train_gen(n_array, start, space, num),
+            'pt': lambda start, space, num: dsp.pulse_train_gen(n_array, start, space, num)
         }
 
         x = eval(expr, {"__builtins__": None}, math_env)
