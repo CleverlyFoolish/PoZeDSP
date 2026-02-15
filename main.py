@@ -79,13 +79,13 @@ sm.fig = fig # Store in state manager for other modules
 # Z-Plane: Left=0.05, Bottom=0.35, Width=0.35, Height=0.50 (Lowered top to 0.85)
 ax_z = fig.add_axes([0.05, 0.35, 0.35, 0.50])
 
-# Response Plots: Left=0.50, Width=0.38 (Shifted right to 0.50)
+# Response Plots: Left=0.50, Width=0.36 (Reduced to clear sidebar)
 # Top aligns with Z-plane at 0.85
-ax_mag = fig.add_axes([0.50, 0.63, 0.38, 0.22])
-ax_phase = fig.add_axes([0.50, 0.35, 0.38, 0.22])
+ax_mag = fig.add_axes([0.50, 0.63, 0.36, 0.22])
+ax_phase = fig.add_axes([0.50, 0.35, 0.36, 0.22])
 
 # Impulse Response: Bottom=0.08, Height=0.20 (Gap 0.07 from top row)
-ax_imp = fig.add_axes([0.05, 0.08, 0.83, 0.20])
+ax_imp = fig.add_axes([0.05, 0.08, 0.81, 0.20])
 
 # Store axes in State Manager so interactions.py can access them
 sm.ax_z = ax_z
@@ -136,7 +136,7 @@ sm.tf_text_artist = tf_text # Store for click detection
 # ------------------------------------------------------------
 # 3. Sidebar UI Controls
 # ------------------------------------------------------------
-panel_x = 0.90 # Moved right to clear plots
+panel_x = 0.89 # Left of 0.90 but right of 0.88 to avoid overlap
 
 # A. Reset Button
 ax_reset = fig.add_axes([panel_x, 0.70, 0.08, 0.05])
